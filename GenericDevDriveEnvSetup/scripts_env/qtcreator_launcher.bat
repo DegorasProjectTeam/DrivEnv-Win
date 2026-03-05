@@ -32,7 +32,7 @@ for %%F in ("%ENV_DIR%\*_env_variables.env") do (
         rem remove suffix "_env_variables"
         set "CAND_PREFIX=!CAND_PREFIX:_env_variables=!"
 
-        set "CAND_BOOT=%SCRIPT_DIR%\!CAND_PREFIX!_env_launcher_bootstrap.sh"
+        set "CAND_BOOT=%SCRIPT_DIR%\!CAND_PREFIX!_qtcreator_launcher_bootstrap.sh"
 
         echo [DEBUG] ENV  : "!CAND_ENV!"
         echo [DEBUG] PREF : "!CAND_PREFIX!"
@@ -53,7 +53,7 @@ if "%COUNT%"=="0" (
     echo         Env dir      : "%ENV_DIR%"
     echo         Expected:
     echo           "%ENV_DIR%\^<prefix^>_env_variables.env"
-    echo           "%SCRIPT_DIR%\^<prefix^>_env_launcher_bootstrap.sh"
+    echo           "%SCRIPT_DIR%\^<prefix^>_qtcreator_launcher_bootstrap.sh"
     exit /b 1
 )
 
@@ -114,9 +114,9 @@ echo [INFO] POSIX bootstrap:  %BOOTSTRAP_POSIX%
 echo.
 
 REM ---------------------------------------------------------------
-REM Launch MSYS2 
+REM Launch MSYS2 (run bootstrap and EXIT)
 REM ---------------------------------------------------------------
 start "Loading env..." cmd /c ^
 ""%MSYS2_SHELL%" -%MSYS2_ENV% -defterm -here -no-start ^
--c "bash -lc 'unset COUNT ENV_FILE BOOTSTRAP_SCRIPT PREFIX CAND_ENV CAND_PREFIX CAND_BOOT MSYS2_ROOT SCRIPT_DIR BOOTSTRAP_WIN DRIVE BOOTSTRAP_POSIX; . ''%BOOTSTRAP_POSIX%''; exec bash'"
+-c "bash -lc 'unset COUNT ENV_FILE BOOTSTRAP_SCRIPT PREFIX CAND_ENV CAND_PREFIX CAND_BOOT MSYS2_ROOT SCRIPT_DIR BOOTSTRAP_WIN DRIVE BOOTSTRAP_POSIX; . ''%BOOTSTRAP_POSIX%''; exit 0'"
 exit /b 0
