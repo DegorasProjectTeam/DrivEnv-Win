@@ -1,7 +1,7 @@
 {
     "environment": {
-        "dev_drive_label": "DEV_DEGORAS_SLR_T1",
-        "dev_drive_letter": "R",
+        "dev_drive_label": "DEV_DEGORAS_SLR_CLANG",
+        "dev_drive_letter": "L",
         "dev_env_name": "DegorasSLR",
         "vhd_root": "C:/DevDrives",
         "vhd_size_gb": 50,
@@ -91,7 +91,7 @@
                 "glimagesink"
             ]
         },
-        "append_windows_system_path": true,
+        "append_windows_system_path": false,
         "proxy_url": ""
     },
     "msys2": {
@@ -100,7 +100,9 @@
             "sha256": ""
         },
         "target": {
-            "subsystem": "ucrt64",
+            "subsystem": "clang64",
+            "package_prefix": "mingw-w64-clang-x86_64",
+            "repo_subpath": "mingw/clang64",
             "arch": "x86_64",
             "base_url": "https://repo.msys2.org"
         },
@@ -111,40 +113,9 @@
                 "version": "1.13.2-1"
             },
             {
-                "name": "gdb",
+                "name": "cmake",
                 "mode": "pinned",
-                "version": "17.2-1"
-            },
-            {
-                "name": "gcc",
-                "mode": "pinned",
-                "version": "16.2.0-3"
-            },
-            {
-                "name": "gcc-libs",
-                "mode": "pinned",
-                "version": "16.2.0-3"
-            },
-            {
-                "name": "gcc-objc",
-                "mode": "pinned",
-                "version": "16.2.0-3"
-            },
-            {
-                "name": "make",
-                "mode": "pinned",
-                "version": "4.4.1-3"
-            },
-            {
-                "name": "make",
-                "mode": "pinned",
-                "version": "4.4.1-3",
-                "repo": "msys"
-            },
-            {
-                "name": "diffutils",
-                "mode": "pinned",
-                "version": "3.12-1"
+                "version": "4.4.2-2"
             },
             {
                 "name": "lld",
@@ -152,43 +123,27 @@
                 "version": "22.1.8-2"
             },
             {
+                "name": "clang",
+                "mode": "pinned",
+                "version": "22.1.8-2"
+            },
+            {
                 "name": "ripgrep",
-                "mode": "pinned",
-                "version": "15.2.0-1"
-            },
-            {
-                "name": "curl",
-                "mode": "pinned",
-                "version": "8.21.0-2"
-            },
-            {
-                "name": "doxygen",
-                "mode": "pinned",
-                "version": "1.18.0-1"
-            },
-            {
-                "name": "7zip",
-                "mode": "pinned",
-                "version": "26.02-1"
-            },
-            {
-                "name": "ntldd",
-                "mode": "pinned",
-                "version": "r19.7fb9365-4"
-            },
-            {
-                "name": "cmake",
-                "mode": "pinned",
-                "version": "4.4.2-2"
-            },
-            {
-                "name": "qt-creator",
-                "mode": "pinned",
-                "version": "20.0.0-1"
-            },
-            {
-                "name": "tree",
                 "mode": "latest"
+            },
+            {
+                "name": "make",
+                "mode": "pinned",
+                "version": "4.4.1-3",
+                "repo": "msys",
+                "file_arch": "x86_64"
+            },
+            {
+                "name": "diffutils",
+                "mode": "pinned",
+                "version": "3.12-1",
+                "repo": "msys",
+                "file_arch": "x86_64"
             }
         ]
     },
@@ -199,24 +154,44 @@
             "baseline_commit": "06d00ffa491e4668627728f14b891d22c6fea146"
         },
         "target": {
-            "triplet": "x64-mingw-ucrt-dynamic-release"
+            "triplet": "x64-mingw-clang-dynamic-release"
         },
-        "buildtrees_root": "R:/bt",
+        "buildtrees_root": "L:/bt",
+        "max_install_attempts": 3,
         "install_schedule": [
             {},
             {
-                "concurrency": 4
+                "concurrency": 8
             },
             {
                 "concurrency": 1
             }
         ],
+        "overlay_ports": [
+            {
+                "triplet": "x64-mingw-clang-dynamic-release",
+                "layers": [
+                    "ports.clang",
+                    "ports"
+                ]
+            },
+            {
+                "triplet": "x64-mingw-ucrt-dynamic-release",
+                "layers": [
+                    "ports.ucrt",
+                    "ports"
+                ]
+            },
+            {
+                "triplet": "*",
+                "layers": [
+                    "ports"
+                ]
+            }
+        ],
         "packages": [
             {
                 "name": "fmt"
-            },
-            {
-                "name": "pkgconf"
             },
             {
                 "name": "nlohmann-json"
@@ -225,139 +200,27 @@
                 "name": "openssl"
             },
             {
-                "name": "zlib"
-            },
-            {
-                "name": "curl",
-                "features": [
-                    "openssl",
-                    "ssh",
-                    "ssl",
-                    "tool",
-                    "brotli",
-                    "c-ares",
-                    "zstd"
-                ]
-            },
-            {
-                "name": "spdlog"
-            },
-            {
-                "name": "libbson"
-            },
-            {
-                "name": "mongo-c-driver",
-                "features": [
-                    "openssl"
-                ]
-            },
-            {
-                "name": "mongo-cxx-driver"
-            },
-            {
-                "name": "xerces-c"
-            },
-            {
-                "name": "sdl2"
-            },
-            {
-                "name": "zeromq",
-                "features": [
-                    "curve",
-                    "draft",
-                    "sodium"
-                ]
-            },
-            {
-                "name": "cppzmq"
-            },
-            {
-                "name": "glib"
-            },
-            {
-                "name": "grpc",
-                "features": [
-                    "codegen"
-                ]
-            },
-            {
-                "name": "ffmpeg",
-                "features": [
-                    "avcodec",
-                    "avformat",
-                    "avfilter",
-                    "avdevice",
-                    "swresample",
-                    "swscale",
-                    "ffmpeg",
-                    "ffprobe",
-                    "ffplay",
-                    "x264",
-                    "x265",
-                    "aom",
-                    "dav1d",
-                    "svt-av1",
-                    "vpx",
-                    "mp3lame",
-                    "opus",
-                    "vorbis",
-                    "speex",
-                    "openjpeg",
-                    "webp",
-                    "zlib",
-                    "bzip2",
-                    "lzma",
-                    "xml2",
-                    "soxr"
-                ]
-            },
-            {
                 "name": "gstreamer",
                 "features": [
-                    "nvcodec",
                     "plugins-base",
                     "plugins-good",
                     "plugins-bad",
                     "gl",
-                    "gl-graphene",
-                    "plugins-ugly",
-                    "gpl",
-                    "openh264",
-                    "x264",
-                    "x265",
-                    "libde265",
-                    "opus-base",
-                    "opus-bad",
-                    "vorbis",
-                    "flac",
-                    "srt",
-                    "hls",
                     "jpeg",
-                    "png",
-                    "webp",
-                    "openjpeg",
-                    "libav"
+                    "png"
                 ]
-            },
-            {
-                "name": "gst-rtsp-server"
             },
             {
                 "name": "qtbase",
                 "features": [
                     "gui",
-                    "thread",
                     "widgets",
                     "network",
                     "opengl",
-                    "testlib",
                     "openssl",
                     "freetype",
-                    "harfbuzz",
                     "png",
                     "jpeg",
-                    "zstd",
-                    "concurrent",
                     "windeployqt"
                 ],
                 "install_schedule": [
@@ -368,24 +231,11 @@
                 "max_install_attempts": 3
             },
             {
-                "name": "qt5compat"
-            },
-            {
-                "name": "qtdeclarative"
-            },
-            {
                 "name": "opencv4",
                 "features": [
-                    "tbb",
-                    "qt",
-                    "gstreamer",
-                    "opengl",
-                    "contrib",
-                    "openjpeg",
                     "jpeg",
                     "png",
-                    "tiff",
-                    "webp"
+                    "tiff"
                 ],
                 "install_schedule": [
                     {
@@ -400,21 +250,8 @@
                 ]
             },
             {
-                "name": "qtmultimedia",
-                "features": [
-                    "ffmpeg",
-                    "widgets",
-                    "qml"
-                ]
-            },
-            {
-                "name": "qtcharts"
-            },
-            {
-                "name": "qtimageformats"
-            },
-            {
-                "name": "qt-advanced-docking-system"
+                "name": "zlib",
+                "triplet": "x64-mingw-ucrt-static-release"
             }
         ]
     },
