@@ -1,12 +1,10 @@
-
 # =====================================================================
-# DEVSYSTEM MINGW64 CONTROLLED TRIPLET
-# Target: x64-mingw-dynamic-devsystem
-# Last updated: 2025-11-04
+# DEVSYSTEM MINGW-CLANG64 CONTROLLED TRIPLET
+# Target: x64-mingw-clang-dynamic-release
 # =====================================================================
 
 # Initial log.
-message(STATUS "[VCPKG-TRIPLET] Using <x64-mingw-ucrt-dynamic-release> custom triplet.")
+message(STATUS "[VCPKG-TRIPLET] Using <x64-mingw-clang-dynamic-release> custom LLVM/Clang triplet.")
 
 # Target ABI and linkage
 set(VCPKG_TARGET_ARCHITECTURE x64)
@@ -14,11 +12,61 @@ set(VCPKG_CRT_LINKAGE dynamic)
 set(VCPKG_LIBRARY_LINKAGE dynamic)
 set(VCPKG_CMAKE_SYSTEM_NAME MinGW)
 
-# Policies suitable for MinGW
+# Force Clang compilers for CMake toolchains inside vcpkg
+set(VCPKG_C_COMPILER clang)
+set(VCPKG_CXX_COMPILER clang++)
+set(VCPKG_AR llvm-ar)
+set(VCPKG_RANLIB llvm-ranlib)
+
+set(ENV{CC} "clang")
+set(ENV{CXX} "clang++")
+set(ENV{AR} "llvm-ar")
+set(ENV{RANLIB} "llvm-ranlib")
+
+# THREE THINGS AUTOTOOLS ASSUMES ABOUT A MINGW TOOLCHAIN THAT ARE NOT TRUE OF CLANG64.
+#
+# 1. libtool classifies a Windows import library by running "$OBJDUMP -f" and matching the output against
+#    deplibs_check_method, which is "file_magic ^x86 archive import|^x86 DLL". That needs GNU binutils'
+#    spelling, "pei-x86-64". CLANG64 ships LLVM's objdump, which says "coff-x86-64" instead, and MSYS2
+#    publishes no binutils package for CLANG64 to point it at -- only lld. So the test fails for EVERY Windows
+#    system library (ws2_32, kernel32, user32, gdi32) and libtool refuses to link against libraries that are
+#    perfectly fine. pass_all tells it to stop second-guessing the linker; a genuinely missing library still
+#    fails, at the linker, where it should.
+set(ENV{lt_cv_deplibs_check_method} "pass_all")
+
+# 2. Past max_cmd_len, libtool writes the object list into a GNU ld linker script -- a file containing
+#    INPUT( ... ) -- and passes that instead. ld.lld cannot read one: linker scripts are an ELF feature and
+#    lld's MinGW driver is COFF, so it reports "unknown file type" and the link dies. The detour is not even
+#    needed: libtool caches 8192, the real Windows CreateProcess limit is 32767, and the object list that
+#    triggered this was 11375 bytes. Raising the threshold stops the linker script being generated at all.
+set(ENV{lt_cv_sys_max_cmd_len} "32000")
+
+# 3. mingw-w64's headers only route printf and friends through the C99-conformant implementation when
+#    __USE_MINGW_ANSI_STDIO is set. GCC's C++ driver defines it implicitly; clang does not, so a library that
+#    checks stops the build outright -- libbson does exactly that:
+#        bson/compat.h:24: error: "__USE_MINGW_ANSI_STDIO > 0 is required for correct PRI* macros"
+#    Setting it matches what a GCC build already gets, and without it the PRI* width macros would genuinely
+#    misbehave rather than merely warn.
+set(VCPKG_C_FLAGS   "-D__USE_MINGW_ANSI_STDIO=1")
+set(VCPKG_CXX_FLAGS "-D__USE_MINGW_ANSI_STDIO=1")
+
+# AND ONE ABOUT THE RUNTIME LIBRARY.
+#
+# libtool links shared libraries with -nostdlib and then rebuilds the runtime library list itself, from the
+# postdeps it derived by parsing "clang++ -v". clang links compiler-rt's builtins by ABSOLUTE PATH rather than
+# with -l -- "clang --print-libgcc-file-name" returns .../lib/clang/22/lib/windows/libclang_rt.builtins-
+# x86_64.a -- and libtool's parser keeps the -L for that directory while dropping the absolute-path archive.
+# The result is a link that can see the directory but never asks for the library, and every object clang
+# compiled with a stack probe fails on "undefined symbol: ___chkstk_ms". The search path is already on the
+# command line, so naming the library is enough. A GCC triplet needs none of this: it gets ___chkstk_ms from
+# libgcc, which libtool does keep.
+set(VCPKG_LINKER_FLAGS "-lclang_rt.builtins-x86_64")
+
+# Policies suitable for MinGW / LLVM
 set(VCPKG_POLICY_ALLOW_OBSOLETE_MSVCRT enabled)
 set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
 
-# Keep the environment deterministic
+# Pass CC/CXX to external build tools (like Autotools/Make used by FFmpeg or GStreamer)
 # WHICH ENVIRONMENT VARIABLES REACH A BUILD, AND WHICH OF THEM COUNT TOWARDS ITS ABI.
 #
 # VCPKG_ENV_PASSTHROUGH does two things at once: it lets a variable through to the build, and it hashes the
@@ -44,7 +92,7 @@ set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
 # MSYSTEM and MSYS2_PATH_TYPE stay TRACKED. They select which toolchain subsystem is in play -- ucrt64 against
 # clang64 against mingw64 -- they hold the same value on every machine, and so they cost nothing to track while
 # keeping the ABI honest about something that genuinely changes the output.
-set(VCPKG_ENV_PASSTHROUGH MSYSTEM MSYS2_PATH_TYPE)
+set(VCPKG_ENV_PASSTHROUGH MSYSTEM MSYS2_PATH_TYPE CC CXX AR RANLIB lt_cv_deplibs_check_method lt_cv_sys_max_cmd_len)
 set(VCPKG_ENV_PASSTHROUGH_UNTRACKED "PATH;TMP;TEMP;NUMBER_OF_PROCESSORS;VCPKG_MAX_CONCURRENCY")
 
 # TEMPORARY FILES STAY ON THE DEV DRIVE.
@@ -74,7 +122,7 @@ if(CMAKE_CURRENT_LIST_FILE MATCHES "^([A-Za-z]:)/")
 endif()
 
 
-# System processor hint (needed for some Qt and pkg-config logic)
+# System processor hint (needed for Qt, OpenCV and pkg-config logic)
 set(VCPKG_CMAKE_SYSTEM_PROCESSOR x86_64)
 
 # Build type — only release binaries
