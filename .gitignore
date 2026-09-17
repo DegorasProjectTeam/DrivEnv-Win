@@ -77,3 +77,7 @@ CMakeUserPresets.json
 
 # Orig
 *.orig
+
+# Working notes: design decisions, status and measurements kept beside the repository while a
+# feature is in progress. Local by design -- they are notes about work, not part of the tool.
+Claude/
